@@ -47,7 +47,7 @@
 
 <div class="goal-row">
   <label for="goal" style="font-size:0.95rem;">Goal:</label>
-  <input type="number" id="goal" step="0.1" placeholder="kg" style="width:90px">
+  <input type="number" id="goal" step="0.1" placeholder="lbs" style="width:90px">
   <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
   <span class="progress-label" id="progressLabel"></span>
 </div>
@@ -210,7 +210,7 @@ function renderChart() {
     data: {
       labels,
       datasets: [{
-        label: 'Weight (kg)',
+        label: 'Weight (lbs)',
         data,
         borderColor: '#6d4aff',
         backgroundColor: 'rgba(109,74,255,0.1)',
