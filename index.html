@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#6d4aff">
 <title>Weight Tracker</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
 <style>
@@ -289,6 +292,11 @@ function render() {
 }
 
 render();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .catch(err => console.warn('SW registration failed:', err));
+}
 </script>
 </body>
 </html>
