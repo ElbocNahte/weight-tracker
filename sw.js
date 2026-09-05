@@ -1,6 +1,6 @@
-const CACHE = 'weight-tracker-v1';
+const CACHE = 'weight-tracker-v2';
 const ASSETS = [
-  './', './index.html', './manifest.webmanifest',
+  './', './index.html', './log.html', './app.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png'
 ];
 
@@ -22,7 +22,6 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(hit =>
       hit ||
       fetch(e.request).then(res => {
-        // cache-first for our files; pass CDN through but keep a copy
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, copy));
         return res;
