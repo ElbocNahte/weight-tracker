@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log · Weight Tracker</title>
+<meta name="theme-color" content="#6d4aff">
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 2rem; background: #fafafa; }
+  .entry-form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  input { padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+  button { padding: 0.6rem 1.2rem; background: #6d4aff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+  button.secondary { background: #eee; color: #333; }
+  .toolbar { display: flex; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .site-nav { display: flex; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.95rem; }
+  .site-nav a { color: #6d4aff; text-decoration: none; font-weight: 500; }
+  .site-nav a:hover { text-decoration: underline; }
+  .site-nav a.active { font-weight: 700; }
+  .entry-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px solid #eee; }
+  .entry-row[data-editing="true"] { background: #f3efff; outline: 2px solid #6d4aff; border-radius: 6px; }
+  .entry-actions { display: flex; gap: 0.4rem; align-items: center; }
+  .icon-btn { background: #eee; border: none; border-radius: 6px; cursor: pointer; padding: 0.3rem 0.55rem; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<h1>⚖️ Log</h1>
+
+<nav class="site-nav">
+  <a href="./index.html">Dashboard</a>
+  <a href="./log.html" class="active">Log</a>
+</nav>
+
+<form class="entry-form" id="form">
+  <input type="date" id="date" required>
+  <input type="number" id="weight" step="0.1" placeholder="lbs" required style="width:110px">
+  <button type="submit" id="logBtn">Log</button>
+</form>
+
+<div id="entries"></div>
+
+<div class="toolbar">
+  <button type="button" class="secondary" id="exportBtn">Export JSON</button>
+  <button type="button" class="secondary" id="importBtn">Import JSON</button>
+  <input type="file" id="importFile" accept=".json" hidden>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
