@@ -168,3 +168,10 @@ function initLogPage() {
   window.renderList = renderList;
   renderList();
 }
+
+// Called after every data change to keep the visible page in sync
+function refreshPage() {
+  if (typeof renderList === 'function') renderList();
+  if (typeof renderStats === 'function') renderStats();
+  if (typeof renderChart === 'function') renderChart();
+}
