@@ -1,207 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weight Tracker</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 2rem; background: #fafafa; }
-  .entry-form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  input { padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-  button { padding: 0.6rem 1.2rem; background: #6d4aff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
-  button.secondary { background: #eee; color: #333; }
-  #entries div { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
-  .stats { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .stat { background: white; padding: 1rem; border-radius: 8px; flex: 1; min-width: 120px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
-  .stat h3 { margin: 0; color: #333; font-size: 0.85rem; }
-  .stat p { margin: 0.25rem 0 0; font-size: 1.4rem; font-weight: bold; color: #6d4aff; }
-  .toolbar { display: flex; gap: 0.5rem; margin-top: 1.5rem; flex-wrap: wrap; }
-  .chart-card { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
-  .goal-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .progress-track { background: #e5e5e5; border-radius: 999px; height: 14px; overflow: hidden; flex: 1; min-width: 150px; }
-  .progress-fill { background: #6d4aff; height: 100%; border-radius: 999px; transition: width 0.4s ease; }
-  .progress-label { font-size: 0.9rem; color: #555; white-space: nowrap; }
-</style>
-</head>
-<body>
-<h1>⚖️ Weight Tracker</h1>
+  [...entries].reverse().forEach((entry) => {
+    const row = document.createElement('div');
+    row.className = 'entry-row';
+    row.dataset.date = entry.date;
 
-<div class="stats">
-  <div class="stat"><h3>Starting</h3><p id="startW">–</p></div>
-  <div class="stat"><h3>Current</h3><p id="curW">–</p></div>
-  <div class="stat"><h3>Change</h3><p id="change">–</p></div>
-</div>
+    const dateSpan = document.createElement('span');
+    dateSpan.textContent = entry.date;
 
-<form class="entry-form" id="form">
-  <input type="date" id="date" required>
-  <input type="number" id="weight" step="0.1" placeholder="kg" required style="width:110px">
-  <button type="submit">Log</button>
-</form>
+    const weightSpan = document.createElement('span');
+    weightSpan.textContent = `${entry.weight} kg`;
 
-<div class="goal-row">
-  <label for="goal" style="font-size:0.95rem;">Goal:</label>
-  <input type="number" id="goal" step="0.1" placeholder="kg" style="width:90px">
-  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-  <span class="progress-label" id="progressLabel"></span>
-</div>
+    const actions = document.createElement('span');
+    actions.className = 'entry-actions';
 
-<div class="chart-card"><canvas id="chart" height="220"></canvas></div>
+    const editBtn = document.createElement('button');
+    editBtn.textContent = '✏️';
+    editBtn.title = 'Edit this entry';
+    editBtn.addEventListener('click', () => startEdit(entry.date));
 
-<div id="entries"></div>
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '🗑️';
+    delBtn.title = 'Delete this entry';
+    delBtn.addEventListener('click', () => deleteEntry(entry.date));
 
-<div class="toolbar">
-  <button type="button" class="secondary" id="exportBtn">Export JSON</button>
-  <button type="button" class="secondary" id="importBtn">Import JSON</button>
-  <input type="file" id="importFile" accept=".json" hidden>
-</div>
-
-<script>
-const KEY = 'weightEntries';
-const GOAL_KEY = 'weightGoal';
-let entries = JSON.parse(localStorage.getItem(KEY) || '[]');
-let chart = null;
-
-const goalInput = document.getElementById('goal');
-goalInput.value = localStorage.getItem(GOAL_KEY) || '';
-
-document.getElementById('date').valueAsDate = new Date();
-
-goalInput.addEventListener('change', () => {
-  localStorage.setItem(GOAL_KEY, goalInput.value);
-  render();
-});
-
-document.getElementById('form').addEventListener('submit', e => {
-  e.preventDefault();
-  const date = document.getElementById('date').value;
-  const weight = parseFloat(document.getElementById('weight').value);
-  entries = entries.filter(x => x.date !== date);
-  entries.push({ date, weight });
-  entries.sort((a, b) => a.date.localeCompare(b.date));
-  save(); render();
-});
-
-document.getElementById('exportBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'weight-data.json';
-  a.click();
-});
-
-document.getElementById('importBtn').addEventListener('click', () =>
-  document.getElementById('importFile').click());
-
-document.getElementById('importFile').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try {
-      const imported = JSON.parse(reader.result);
-      if (!Array.isArray(imported)) throw new Error('bad format');
-      const byDate = new Map(entries.map(x => [x.date, x]));
-      imported.forEach(x => {
-        if (x.date && typeof x.weight === 'number')
-          byDate.set(x.date, { date: x.date, weight: x.weight });
-      });
-      entries = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
-      save(); render();
-    } catch { alert('Could not read that file.'); }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-});
-
-function save() { localStorage.setItem(KEY, JSON.stringify(entries)); }
-
-// Weekly average: groups the last N weeks (Mon–Sun), keeps list tidy
-function weeklyAverages(nWeeks = 8) {
-  const weeks = [];
-  const now = new Date();
-  for (let i = nWeeks - 1; i >= 0; i--) {
-    const end = new Date(now);
-    end.setDate(now.getDate() - now.getDay() - 7 * i + 7); // Sunday
-    const start = new Date(end);
-    start.setDate(end.getDate() - 6); // Monday
-    const inWeek = entries.filter(x => {
-      const d = new Date(x.date + 'T00:00:00');
-      return d >= start && d <= end;
-    });
-    if (inWeek.length) {
-      const avg = inWeek.reduce((s, x) => s + x.weight, 0) / inWeek.length;
-      const label = `${start.getMonth() + 1}/${start.getDate()}`;
-      weeks.push({ label, value: +avg.toFixed(1) });
-    }
-  }
-  return weeks;
-}
-
-function renderChart() {
-  const weeks = weeklyAverages();
-  const ctx = document.getElementById('chart');
-  if (chart) chart.destroy();
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: weeks.map(w => w.label),
-      datasets: [{
-        label: 'Weekly average (kg)',
-        data: weeks.map(w => w.value),
-        borderColor: '#6d4aff',
-        backgroundColor: 'rgba(109,74,255,0.1)',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 3
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: false } }
-    }
+    actions.append(weightSpan, editBtn, delBtn);
+    row.append(dateSpan, actions);
+    list.append(row);
   });
-}
-
-function render() {
-  const list = document.getElementById('entries');
-  list.innerHTML = '';
-  [...entries].reverse().forEach(({ date, weight }) => {
-    list.insertAdjacentHTML('beforeend',
-      `<div><span>${date}</span><span>${weight} kg</span></div>`);
-  });
-
-  if (entries.length >= 1) {
-    const start = entries[0].weight;
-    const cur = entries[entries.length - 1].weight;
-    document.getElementById('startW').textContent = start + ' kg';
-    document.getElementById('curW').textContent = cur + ' kg';
-    const diff = (cur - start).toFixed(1);
-    document.getElementById('change').textContent =
-      (diff <= 0 ? '' : '+') + diff + ' kg';
-
-    // Goal progress
-    const goal = parseFloat(goalInput.value);
-    const fill = document.getElementById('progressFill');
-    const label = document.getElementById('progressLabel');
-    if (goal && start !== goal) {
-      const total = Math.abs(start - goal);
-      const done = Math.max(0, Math.min(total, Math.abs(start - cur)));
-      const pct = (done / total) * 100;
-      // Count it as progress only if moving in the right direction
-      const movingRight = (goal < start && cur <= start) || (goal > start && cur >= start);
-      const realPct = movingRight ? pct : 0;
-      fill.style.width = realPct + '%';
-      label.textContent = `${realPct.toFixed(0)}% · ${Math.abs(cur - goal).toFixed(1)} kg to go`;
-    } else {
-      fill.style.width = '0%';
-      label.textContent = '';
-    }
-  }
-  renderChart();
-}
-render();
-</script>
-</body>
-</html>
