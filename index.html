@@ -241,7 +241,7 @@ function render() {
     dateSpan.textContent = entry.date;
 
     const weightSpan = document.createElement('span');
-    weightSpan.textContent = `${entry.weight} kg`;
+    weightSpan.textContent = `${entry.weight}`;
 
     const actions = document.createElement('span');
     actions.className = 'entry-actions';
@@ -265,11 +265,11 @@ function render() {
   if (entries.length >= 1) {
     const start = entries[0].weight;
     const cur = entries[entries.length - 1].weight;
-    document.getElementById('startW').textContent = start + ' kg';
-    document.getElementById('curW').textContent = cur + ' kg';
+    document.getElementById('startW').textContent = start + '';
+    document.getElementById('curW').textContent = cur + '';
     const diff = (cur - start).toFixed(1);
     document.getElementById('change').textContent =
-      (diff <= 0 ? '' : '+') + diff + ' kg';
+      (diff <= 0 ? '' : '+') + diff + '';
 
     const goal = parseFloat(goalInput.value);
     const fill = document.getElementById('progressFill');
@@ -281,7 +281,7 @@ function render() {
       const movingRight = (goal < start && cur <= start) || (goal > start && cur >= start);
       const realPct = movingRight ? pct : 0;
       fill.style.width = realPct + '%';
-      label.textContent = `${realPct.toFixed(0)}% · ${Math.abs(cur - goal).toFixed(1)} kg to go`;
+      label.textContent = `${realPct.toFixed(0)}% · ${Math.abs(cur - goal).toFixed(1)} to go`;
     } else {
       fill.style.width = '0%';
       label.textContent = '';
